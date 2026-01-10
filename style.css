@@ -1,0 +1,67 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    text-align: center;
+    height: 10px;
+}
+
+.header {
+    background-image: url("transferir.jpg");
+    background-size: contain;
+    background-position: center;
+    height: 260px;
+
+    position: relative;
+    color: white;
+}
+
+.overlay {
+    background: linear-gradient(
+        rgba(0, 0, 0, 0.75),
+        rgba(0, 0, 0, 0.45)
+    );
+
+    height: 100%;
+    width: 100%;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+}
+
+
+nav {
+    margin-top: 10px;
+}
+
+nav button {
+    background:gray;
+    border: none;
+    color: white;
+    margin-right: 15px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    border-radius: 5px;
+}
+
+nav button:hover {
+    text-decoration: underline;
+}
+
+main {
+    background-color:wheat;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 5px;
+}
+
+footer {
+    background-color: #1f1f1f;
+    color: white;
+    text-align: center;
+    padding: 10px;
+}
