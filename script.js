@@ -71,5 +71,19 @@ function carregar(pagina) {
     }
 }
 
+
+
 // Carrega a Home automaticamente
 carregar("home");
+
+function aceitarCookies() {
+    localStorage.setItem("cookiesAceitos", "true");
+    document.getElementById("cookie-banner").style.display = "none";
+}
+
+window.onload = function () {
+    if (localStorage.getItem("cookiesAceitos") === "true") {
+        document.getElementById("cookie-banner").style.display = "none";
+    }
+};
+
