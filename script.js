@@ -13,20 +13,26 @@ function carregar(pagina) {
                 Este site apresenta conceitos básicos para quem está começando
                 no mundo do Game Dev.
             </p>
+            <img src="assets/images/codigo.jpg" class="img-codigo">
         `;
     }
 
     if (pagina === "engines") {
         conteudo.innerHTML = `
+           
+        <div class="engines-container">
             <h2>Game Engines</h2>
             <p>Uma game engine facilita o desenvolvimento de jogos.</p>
-            <ul>
+            <ul class = lista-engines>
                 <li><strong>Unity:</strong> Muito usada por iniciantes</li>
                 <li><strong>Unreal Engine:</strong> Gráficos avançados</li>
                 <li><strong>Godot:</strong> Open source</li>
                 <li><strong>GameMaker:</strong> Ideal para jogos 2D</li>
             </ul>
-        `;
+            
+           <img src="assets/images/unreal-image.jpg" class="img-engines">
+        </div>
+           `;
     }
 
     if (pagina === "linguagens") {

@@ -7,7 +7,7 @@ body {
 }
 
 .header {
-    background-image: url("transferir.jpg");
+    background-image: url("assets/images/transferir.jpg");
     background-size: contain;
     background-position: center;
     height: 260px;
@@ -68,4 +68,27 @@ footer {
 
 ul {
     list-style: none;      
+}
+
+.engines-container {
+    display: block
+}
+
+.lista-engines {
+    font-size: 15px;
+    text-align: center;
+
+
+}
+
+.img-engines {
+    width: 20%;
+    max-width: 300px;
+    border-radius: 8px;
+}
+
+.img-codigo{
+     width: 20%;
+    max-width: 300px;
+    border-radius: 8px;
 }
