@@ -1,0 +1,16 @@
+{
+  "users": [
+    {
+      "id": "129e6b82-0a7c-4ff8-8c56-2620e6af21e8",
+      "username": "testa21038",
+      "passwordHash": "$2b$10$f0R0ei4IJcySyMe80vK/W.OWyXrNB/ygSjEZanpNLomVutjWxNVYy",
+      "createdAt": "2026-03-04T22:51:02.987Z"
+    },
+    {
+      "id": "65779e48-882b-4db5-bc6e-64dc187450ae",
+      "username": "danylo Andrade",
+      "passwordHash": "$2b$10$/6rfVrQd8rfqFiEX0tMTQeB4WathQmQN6NqwSZCgEnGkGfCz5nkde",
+      "createdAt": "2026-03-04T23:00:20.221Z"
+    }
+  ]
+}

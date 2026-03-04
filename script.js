@@ -1,89 +1,116 @@
-const conteudo = document.getElementById("conteudo");
+﻿const healthText = document.getElementById("health-text");
+const usersList = document.getElementById("users-list");
+const reloadUsersButton = document.getElementById("reload-users");
 
-function carregar(pagina) {
+const registerForm = document.getElementById("register-form");
+const registerMessage = document.getElementById("register-message");
 
-    if (pagina === "home") {
-        conteudo.innerHTML = `
-            <h2>O que é Desenvolvimento de Jogos?</h2>
-            <p>
-                Desenvolvimento de jogos é o processo de criação de jogos digitais,
-                envolvendo programação, design, gráficos e lógica.
-            </p>
-            <p>
-                Este site apresenta conceitos básicos para quem está começando
-                no mundo do Game Dev.
-            </p>
-            <img src="assets/images/codigo.jpg" class="img-codigo">
-        `;
-    }
+const loginForm = document.getElementById("login-form");
+const loginMessage = document.getElementById("login-message");
 
-    if (pagina === "engines") {
-        conteudo.innerHTML = `
-           
-        <div class="engines-container">
-            <h2>Game Engines</h2>
-            <p>Uma game engine facilita o desenvolvimento de jogos.</p>
-            <ul class = lista-engines>
-                <li><strong>Unity:</strong> Muito usada por iniciantes</li>
-                <li><strong>Unreal Engine:</strong> Gráficos avançados</li>
-                <li><strong>Godot:</strong> Open source</li>
-                <li><strong>GameMaker:</strong> Ideal para jogos 2D</li>
-            </ul>
-            
-           <img src="assets/images/unreal-image.jpg" class="img-engines">
-        </div>
-           `;
-    }
+function setMessage(target, text, type) {
+  target.textContent = text;
+  target.classList.remove("ok", "error");
 
-    if (pagina === "linguagens") {
-        conteudo.innerHTML = `
-            <h2>Linguagens de Programação</h2>
-            <ul>
-                <li><strong>C#:</strong> Usada na Unity</li>
-                <li><strong>C++:</strong> Usada na Unreal</li>
-                <li><strong>GDScript:</strong> Linguagem da Godot</li>
-                <li><strong>Python:</strong> Boa para aprendizado</li>
-            </ul>
-        `;
-    }
-
-    if (pagina === "dicas") {
-        conteudo.innerHTML = `
-            <h2>Dicas para Iniciantes</h2>
-            <ul>
-                <li>Comece com jogos simples</li>
-                <li>Aprenda lógica de programação</li>
-                <li>Não pule etapas</li>
-                <li>Use a documentação oficial</li>
-                <li>Pratique bastante</li>
-            </ul>
-        `;
-    }
-
-    if (pagina === "sobre") {
-        conteudo.innerHTML = `
-            <h2>Sobre o Projeto</h2>
-            <p>
-                Este site foi desenvolvido como um projeto acadêmico
-                para praticar HTML, CSS e JavaScript básico.
-            </p>
-        `;
-    }
+  if (type) {
+    target.classList.add(type);
+  }
 }
 
+async function requestJson(url, options = {}) {
+  const response = await fetch(url, {
+    headers: {
+      "Content-Type": "application/json",
+      ...(options.headers || {}),
+    },
+    ...options,
+  });
 
+  const data = await response.json().catch(() => ({}));
 
-// Carrega a Home automaticamente
-carregar("home");
+  if (!response.ok) {
+    const message = data.error || "Request failed";
+    throw new Error(message);
+  }
 
-function aceitarCookies() {
-    localStorage.setItem("cookiesAceitos", "true");
-    document.getElementById("cookie-banner").style.display = "none";
+  return data;
 }
 
-window.onload = function () {
-    if (localStorage.getItem("cookiesAceitos") === "true") {
-        document.getElementById("cookie-banner").style.display = "none";
-    }
-};
+async function loadHealth() {
+  try {
+    const data = await requestJson("/api/health");
+    healthText.textContent = data.message;
+  } catch (error) {
+    healthText.textContent = `Server unavailable: ${error.message}`;
+  }
+}
 
+function renderUsers(users) {
+  usersList.innerHTML = "";
+
+  if (users.length === 0) {
+    const empty = document.createElement("li");
+    empty.textContent = "No users yet. Register the first account.";
+    usersList.appendChild(empty);
+    return;
+  }
+
+  users.forEach((user) => {
+    const item = document.createElement("li");
+    item.textContent = `${user.username} (created: ${new Date(user.createdAt).toLocaleString()})`;
+    usersList.appendChild(item);
+  });
+}
+
+async function loadUsers() {
+  try {
+    const users = await requestJson("/api/users");
+    renderUsers(users);
+  } catch (error) {
+    usersList.innerHTML = `<li>Failed to load users: ${error.message}</li>`;
+  }
+}
+
+registerForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(registerForm);
+  const username = String(formData.get("username") || "").trim();
+  const password = String(formData.get("password") || "");
+
+  try {
+    const user = await requestJson("/api/register", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+
+    setMessage(registerMessage, `User ${user.username} created successfully.`, "ok");
+    registerForm.reset();
+    await loadUsers();
+  } catch (error) {
+    setMessage(registerMessage, error.message, "error");
+  }
+});
+
+loginForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const formData = new FormData(loginForm);
+  const username = String(formData.get("username") || "").trim();
+  const password = String(formData.get("password") || "");
+
+  try {
+    const result = await requestJson("/api/login", {
+      method: "POST",
+      body: JSON.stringify({ username, password }),
+    });
+
+    setMessage(loginMessage, result.message, "ok");
+    loginForm.reset();
+  } catch (error) {
+    setMessage(loginMessage, error.message, "error");
+  }
+});
+
+reloadUsersButton.addEventListener("click", loadUsers);
+
+loadHealth();
+loadUsers();

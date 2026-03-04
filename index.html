@@ -1,41 +1,69 @@
-<!DOCTYPE html>
-<html lang="pt-br">
+﻿<!DOCTYPE html>
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>GameDev para Iniciantes</title>
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gamers Community</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
-<div id="cookie-banner" class="cookie-banner">
-    <p>
-        Este site utiliza cookies para melhorar a experiência do usuário.
-        Ao continuar navegando, você concorda com o uso de cookies.
-    </p>
-    <button onclick="aceitarCookies()">Aceitar</button>
-</div>
-
 <body>
-
-<header class="header">
-    <div class="overlay">
-        <h1>GameDev para Iniciantes</h1>
-        <nav>
-            <button onclick="carregar('home')">Home</button>
-            <button onclick="carregar('engines')">Engines</button>
-            <button onclick="carregar('linguagens')">Linguagens</button>
-            <button onclick="carregar('dicas')">Dicas</button>
-            <button onclick="carregar('sobre')">Sobre</button>
-        </nav>
+  <header class="hero">
+    <div class="hero__content">
+      <p class="eyebrow">Gamers Community</p>
+      <h1>Learn game dev and join the community</h1>
+      <p class="subtitle">Simple full-stack project with Express, JSON database, bcrypt and nodemon.</p>
     </div>
-</header>
+  </header>
 
+  <main class="container">
+    <section class="card card--status">
+      <h2>API Status</h2>
+      <p id="health-text">Checking server...</p>
+    </section>
 
-<main id="conteudo"></main>
+    <section class="grid">
+      <article class="card">
+        <h2>Create Account</h2>
+        <form id="register-form" class="form">
+          <label for="register-username">Username</label>
+          <input id="register-username" name="username" type="text" required minlength="3" maxlength="24">
 
-<footer>
-    <p>Projeto acadêmico - GameDev para Iniciantes</p>
-</footer>
+          <label for="register-password">Password</label>
+          <input id="register-password" name="password" type="password" required minlength="6">
 
-<script src="script.js"></script>
+          <button type="submit">Register</button>
+        </form>
+        <p id="register-message" class="message"></p>
+      </article>
+
+      <article class="card">
+        <h2>Login</h2>
+        <form id="login-form" class="form">
+          <label for="login-username">Username</label>
+          <input id="login-username" name="username" type="text" required>
+
+          <label for="login-password">Password</label>
+          <input id="login-password" name="password" type="password" required>
+
+          <button type="submit">Login</button>
+        </form>
+        <p id="login-message" class="message"></p>
+      </article>
+    </section>
+
+    <section class="card">
+      <div class="section-head">
+        <h2>Community Members</h2>
+        <button id="reload-users" type="button">Reload</button>
+      </div>
+      <ul id="users-list" class="users-list"></ul>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built with Node.js + Express</p>
+  </footer>
+
+  <script src="script.js"></script>
 </body>
 </html>
