@@ -4,11 +4,20 @@ const fs = require("fs/promises");
 const fsSync = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+let jwt;
+
+try {
+  jwt = require("jsonwebtoken");
+} catch (error) {
+  jwt = null;
+}
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 const DB_PATH = path.join(__dirname, "db.json");
 const SALT_ROUNDS = 10;
+const JWT_SECRET = process.env.JWT_SECRET || "dev-secret-change-in-production";
+const JWT_EXPIRES_IN = "1h";
 
 app.use(express.json());
 app.use(express.static(__dirname));
@@ -32,6 +41,38 @@ async function ensureDb() {
 
 function sanitizeUsername(value) {
   return String(value || "").trim();
+}
+
+function ensureJwtLibrary(res) {
+  if (jwt) {
+    return true;
+  }
+
+  res.status(500).json({
+    error: "JWT library not installed. Run: npm install jsonwebtoken",
+  });
+  return false;
+}
+
+function authMiddleware(req, res, next) {
+  if (!ensureJwtLibrary(res)) {
+    return;
+  }
+
+  const authHeader = String(req.headers.authorization || "");
+  const [scheme, token] = authHeader.split(" ");
+
+  if (scheme !== "Bearer" || !token) {
+    return res.status(401).json({ error: "Missing or invalid token" });
+  }
+
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    return next();
+  } catch (error) {
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
 }
 
 app.get("/api/health", (req, res) => {
@@ -99,6 +140,10 @@ app.post("/api/register", async (req, res) => {
 
 app.post("/api/login", async (req, res) => {
   try {
+    if (!ensureJwtLibrary(res)) {
+      return;
+    }
+
     const username = sanitizeUsername(req.body.username);
     const password = String(req.body.password || "");
 
@@ -121,9 +166,41 @@ app.post("/api/login", async (req, res) => {
       return res.status(401).json({ error: "Invalid credentials" });
     }
 
-    return res.json({ message: "Login successful" });
+    const token = jwt.sign(
+      { id: user.id, username: user.username },
+      JWT_SECRET,
+      { expiresIn: JWT_EXPIRES_IN }
+    );
+
+    return res.json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user.id,
+        username: user.username,
+        createdAt: user.createdAt,
+      },
+    });
   } catch (error) {
     return res.status(500).json({ error: "Failed to login" });
+  }
+});
+
+app.get("/api/profile", authMiddleware, async (req, res) => {
+  try {
+    const db = await readDb();
+    const user = db.users.find((item) => item.id === req.user.id);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    return res.json({
+      id: user.id,
+      username: user.username,
+      createdAt: user.createdAt,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to load profile" });
   }
 });
 
