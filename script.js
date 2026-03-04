@@ -7,16 +7,13 @@ const registerMessage = document.getElementById("register-message");
 
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
-const loadProfileButton = document.getElementById("load-profile");
-const profileMessage = document.getElementById("profile-message");
-const TOKEN_KEY = "gc_token";
 
 function setMessage(target, text, type) {
   target.textContent = text;
   target.classList.remove("ok", "error");
 
   if (type) {
-    target.classList.add(type);
+    target.classList.add(type);j
   }
 }
 
@@ -74,10 +71,6 @@ async function loadUsers() {
   }
 }
 
-function getToken() {
-  return localStorage.getItem(TOKEN_KEY) || "";
-}
-
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(registerForm);
@@ -110,13 +103,7 @@ loginForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({ username, password }),
     });
 
-    localStorage.setItem(TOKEN_KEY, result.token);
     setMessage(loginMessage, result.message, "ok");
-    setMessage(
-      profileMessage,
-      "Token salvo com sucesso. Clique em 'Load My Profile'.",
-      "ok"
-    );
     loginForm.reset();
   } catch (error) {
     setMessage(loginMessage, error.message, "error");
@@ -124,29 +111,6 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 reloadUsersButton.addEventListener("click", loadUsers);
-loadProfileButton.addEventListener("click", async () => {
-  const token = getToken();
-  if (!token) {
-    setMessage(profileMessage, "Faça login primeiro para gerar o token.", "error");
-    return;
-  }
-
-  try {
-    const profile = await requestJson("/api/profile", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    setMessage(
-      profileMessage,
-      `Autorizado: ${profile.username} (criado em ${new Date(profile.createdAt).toLocaleString()})`,
-      "ok"
-    );
-  } catch (error) {
-    setMessage(profileMessage, error.message, "error");
-  }
-});
 
 loadHealth();
 loadUsers();
