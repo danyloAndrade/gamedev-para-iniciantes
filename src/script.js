@@ -8,8 +8,11 @@ const registerMessage = document.getElementById("register-message");
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
 const loadProfileButton = document.getElementById("load-profile");
+const deleteAccountButton = document.getElementById("delete-account");
 const profileMessage = document.getElementById("profile-message");
+
 const TOKEN_KEY = "gc_token";
+const USER_ID_KEY = "gc_user_id";
 
 function setMessage(target, text, type) {
   target.textContent = text;
@@ -78,6 +81,20 @@ function getToken() {
   return localStorage.getItem(TOKEN_KEY) || "";
 }
 
+function getUserId() {
+  return localStorage.getItem(USER_ID_KEY) || "";
+}
+
+function saveAuth(token, userId) {
+  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem(USER_ID_KEY, userId);
+}
+
+function clearAuth() {
+  localStorage.removeItem(TOKEN_KEY);
+  localStorage.removeItem(USER_ID_KEY);
+}
+
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(registerForm);
@@ -111,7 +128,7 @@ loginForm.addEventListener("submit", async (event) => {
     });
 
     if (result.token) {
-      localStorage.setItem(TOKEN_KEY, result.token);
+      saveAuth(result.token, result.user?.id || "");
       setMessage(
         profileMessage,
         "Token salvo. Clique em 'Load My Profile' para testar a rota protegida.",
@@ -127,10 +144,11 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 reloadUsersButton.addEventListener("click", loadUsers);
+
 loadProfileButton.addEventListener("click", async () => {
   const token = getToken();
   if (!token) {
-    setMessage(profileMessage, "Faça login primeiro para obter o token.", "error");
+    setMessage(profileMessage, "Faca login primeiro para obter o token.", "error");
     return;
   }
 
@@ -141,11 +159,53 @@ loadProfileButton.addEventListener("click", async () => {
       },
     });
 
+    localStorage.setItem(USER_ID_KEY, profile.id);
     setMessage(
       profileMessage,
       `Autorizado: ${profile.username} (criado em ${new Date(profile.createdAt).toLocaleString()})`,
       "ok"
     );
+  } catch (error) {
+    setMessage(profileMessage, error.message, "error");
+  }
+});
+
+deleteAccountButton.addEventListener("click", async () => {
+  const token = getToken();
+  if (!token) {
+    setMessage(profileMessage, "Faca login primeiro para excluir sua conta.", "error");
+    return;
+  }
+
+  let userId = getUserId();
+
+  try {
+    if (!userId) {
+      const profile = await requestJson("/api/profile", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      userId = profile.id;
+      localStorage.setItem(USER_ID_KEY, userId);
+    }
+
+    const confirmed = window.confirm("Tem certeza que deseja excluir sua conta?");
+    if (!confirmed) {
+      return;
+    }
+
+    await requestJson(`/api/users/${userId}`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    clearAuth();
+    setMessage(loginMessage, "Conta excluida com sucesso.", "ok");
+    setMessage(profileMessage, "Sua conta foi removida.", "ok");
+    await loadUsers();
   } catch (error) {
     setMessage(profileMessage, error.message, "error");
   }

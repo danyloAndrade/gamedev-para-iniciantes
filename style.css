@@ -111,6 +111,14 @@ button:hover {
   background: var(--brand-dark);
 }
 
+#delete-account {
+  background: #dc2626;
+}
+
+#delete-account:hover {
+  background: #b91c1c;
+}
+
 .message {
   min-height: 24px;
   margin: 10px 0 0;
