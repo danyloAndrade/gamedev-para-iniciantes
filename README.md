@@ -19,6 +19,8 @@ Projeto full stack simples para cadastro, login e validacao de rota protegida co
 - Login de usuario
 - Listagem de usuarios sem expor hash da senha
 - Rota protegida com token (`GET /api/profile`)
+- Exclusao da propria conta (`DELETE /api/users/:id`)
+- Botao no frontend para excluir conta logada
 - Persistencia local em `src/db.json`
 
 ## Estrutura do projeto
@@ -98,6 +100,16 @@ npm start
 - `GET /api/profile`
   - Requer header `Authorization: Bearer <token>`.
   - Retorna dados do usuario autenticado.
+- `DELETE /api/users/:id`
+  - Requer header `Authorization: Bearer <token>`.
+  - Permite excluir apenas a propria conta (id da URL deve ser o mesmo do token).
+
+## Frontend
+
+Na secao de rota protegida existem dois botoes:
+
+- `Load My Profile`: testa autenticacao JWT.
+- `Delete My Account`: remove a conta logada apos confirmacao.
 
 ## Arquitetura (resumo)
 
@@ -129,6 +141,7 @@ npm start
 - Hash com `bcrypt`.
 - Token JWT com expiracao de 1 hora.
 - Rota de perfil protegida por middleware de autenticacao.
+- Exclusao de conta restrita ao proprio usuario autenticado.
 
 ## Melhorias futuras
 
