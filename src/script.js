@@ -7,13 +7,16 @@ const registerMessage = document.getElementById("register-message");
 
 const loginForm = document.getElementById("login-form");
 const loginMessage = document.getElementById("login-message");
+const loadProfileButton = document.getElementById("load-profile");
+const profileMessage = document.getElementById("profile-message");
+const TOKEN_KEY = "gc_token";
 
 function setMessage(target, text, type) {
   target.textContent = text;
   target.classList.remove("ok", "error");
 
   if (type) {
-    target.classList.add(type);j
+    target.classList.add(type);
   }
 }
 
@@ -71,6 +74,10 @@ async function loadUsers() {
   }
 }
 
+function getToken() {
+  return localStorage.getItem(TOKEN_KEY) || "";
+}
+
 registerForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const formData = new FormData(registerForm);
@@ -103,6 +110,15 @@ loginForm.addEventListener("submit", async (event) => {
       body: JSON.stringify({ username, password }),
     });
 
+    if (result.token) {
+      localStorage.setItem(TOKEN_KEY, result.token);
+      setMessage(
+        profileMessage,
+        "Token salvo. Clique em 'Load My Profile' para testar a rota protegida.",
+        "ok"
+      );
+    }
+
     setMessage(loginMessage, result.message, "ok");
     loginForm.reset();
   } catch (error) {
@@ -111,6 +127,29 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 reloadUsersButton.addEventListener("click", loadUsers);
+loadProfileButton.addEventListener("click", async () => {
+  const token = getToken();
+  if (!token) {
+    setMessage(profileMessage, "Faça login primeiro para obter o token.", "error");
+    return;
+  }
+
+  try {
+    const profile = await requestJson("/api/profile", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    setMessage(
+      profileMessage,
+      `Autorizado: ${profile.username} (criado em ${new Date(profile.createdAt).toLocaleString()})`,
+      "ok"
+    );
+  } catch (error) {
+    setMessage(profileMessage, error.message, "error");
+  }
+});
 
 loadHealth();
 loadUsers();

@@ -1,50 +1,77 @@
-# Gamers Community - Full Stack Simples com Node.js
+﻿# Gamers Community - API + Frontend com Node.js
 
-Este projeto e uma aplicacao full stack simples feita com:
+Projeto full stack simples para cadastro, login e validacao de rota protegida com JWT.
+
+## Tecnologias
 
 - Node.js
 - Express
-- JSON como banco de dados local
+- JSON local como banco de dados
 - bcrypt para hash de senha
+- jsonwebtoken para autenticacao
+- dotenv para variaveis de ambiente
 - nodemon para desenvolvimento
-
-O objetivo e demonstrar um fluxo completo de cadastro e login conectando front-end e back-end.
 
 ## Funcionalidades
 
-- Status da API na tela
+- Status da API na interface
 - Cadastro de usuario
 - Login de usuario
-- Listagem de usuarios cadastrados
-- Persistencia local em `db.json`
-- Senhas protegidas com `bcrypt`
-- Autenticacao com JWT
-- Rota protegida por token (`GET /api/profile`)
+- Listagem de usuarios sem expor hash da senha
+- Rota protegida com token (`GET /api/profile`)
+- Persistencia local em `src/db.json`
 
 ## Estrutura do projeto
 
-- `server.js`: servidor Express, rotas da API e regras de negocio
-- `index.html`: interface da aplicacao
-- `style.css`: estilos da interface
-- `script.js`: logica do front-end e consumo da API
-- `db.json`: "banco de dados" em arquivo JSON
-- `package.json`: scripts e dependencias
+```text
+.
+|- assets/
+|- src/
+|  |- controllers/
+|  |  |- authController.js
+|  |  |- healthController.js
+|  |  `- usersController.js
+|  |- middlewares/
+|  |  `- authMiddleware.js
+|  |- routes/
+|  |  `- index.js
+|  |- utils/
+|  |  |- db.js
+|  |  `- jwt.js
+|  |- db.json
+|  |- script.js
+|  `- server.js
+|- .env.example
+|- .gitignore
+|- index.html
+|- style.css
+`- package.json
+```
+
+## Variaveis de ambiente
+
+Crie um arquivo `.env` na raiz baseado no `.env.example`:
+
+```env
+PORT=3000
+JWT_SECRET=dev-secret-change-in-production
+```
 
 ## Como executar
 
-1. Instale dependencias:
+1. Instalar dependencias:
 
 ```bash
 npm install
 ```
 
-2. Rode em desenvolvimento (com recarga automatica):
+2. Rodar em desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-3. Abra no navegador:
+3. Abrir no navegador:
 
 ```text
 http://localhost:3000
@@ -56,71 +83,32 @@ Para rodar sem nodemon:
 npm start
 ```
 
-## Back-end (`server.js`)
-
-### 1) Configuracao inicial
-
-- `express.json()` permite receber JSON no body das requisicoes.
-- `express.static(__dirname)` publica os arquivos do front (`index.html`, `style.css`, `script.js`).
-- `PORT` usa variavel de ambiente ou `3000`.
-
-### 2) Banco JSON
-
-O projeto usa o arquivo `db.json` para armazenar usuarios.
-
-- `ensureDb()`: cria `db.json` com `{ users: [] }` caso nao exista.
-- `readDb()`: le e converte o JSON para objeto JavaScript.
-- `writeDb(data)`: salva o objeto atualizado no arquivo.
-
-### 3) Rotas da API
+## Endpoints da API
 
 - `GET /api/health`
-  - Retorna se o servidor esta ativo.
+  - Retorna status da API.
 - `GET /api/users`
-  - Retorna usuarios sem expor `passwordHash`.
+  - Lista usuarios publicos (`id`, `username`, `createdAt`).
 - `POST /api/register`
-  - Recebe `username` e `password`.
-  - Valida campos obrigatorios.
-  - Exige senha com minimo de 6 caracteres.
-  - Impede usernames duplicados (ignorando maiusculas/minusculas).
-  - Gera hash com `bcrypt.hash(password, 10)`.
-  - Salva no `db.json`.
+  - Body: `{ "username": "...", "password": "..." }`
+  - Valida obrigatoriedade, minimo de 6 caracteres na senha e username unico.
 - `POST /api/login`
-  - Busca usuario por `username`.
-  - Valida senha com `bcrypt.compare`.
-  - Em caso de sucesso, retorna um JWT para autenticacao.
-- `GET /api/profile` (protegida)
-  - Exige header `Authorization: Bearer <token>`.
+  - Body: `{ "username": "...", "password": "..." }`
+  - Retorna token JWT e dados basicos do usuario.
+- `GET /api/profile`
+  - Requer header `Authorization: Bearer <token>`.
   - Retorna dados do usuario autenticado.
 
-### 4) Fallback de rota
+## Arquitetura (resumo)
 
-- `app.use((req, res) => res.sendFile(...index.html))`
-  - Qualquer rota nao tratada pela API devolve a pagina principal.
+- `src/server.js`: bootstrap da aplicacao, `dotenv`, middlewares globais e fallback para `index.html`.
+- `src/routes/index.js`: concentracao de rotas da API.
+- `src/controllers/*.js`: regras por dominio (`auth`, `users`, `health`).
+- `src/middlewares/authMiddleware.js`: validacao do token JWT.
+- `src/utils/db.js`: leitura/escrita/garantia do banco JSON.
+- `src/utils/jwt.js`: carga opcional da lib JWT e validacao de disponibilidade.
 
-## Front-end (`script.js`)
-
-O front consome a API usando `fetch`:
-
-- `requestJson(url, options)`: funcao reutilizavel para requisicoes HTTP.
-- `loadHealth()`: chama `GET /api/health` e atualiza o status da API.
-- `loadUsers()`: chama `GET /api/users` e desenha a lista de usuarios.
-- Submit do formulario de cadastro:
-  - chama `POST /api/register`.
-- Submit do formulario de login:
-  - chama `POST /api/login`.
-
-Tambem ha mensagens visuais de sucesso/erro para orientar o usuario.
-
-## Seguranca aplicada
-
-- Senha nao e armazenada em texto puro.
-- O campo salvo no banco e `passwordHash` (hash bcrypt).
-- No login, a senha digitada e comparada com o hash via `bcrypt.compare`.
-- O token JWT expira em 1 hora.
-- Rotas protegidas validam token com assinatura secreta.
-
-## Exemplo do formato no `db.json`
+## Formato do banco (`src/db.json`)
 
 ```json
 {
@@ -129,14 +117,22 @@ Tambem ha mensagens visuais de sucesso/erro para orientar o usuario.
       "id": "uuid",
       "username": "usuario",
       "passwordHash": "$2b$10$...",
-      "createdAt": "2026-03-04T22:51:02.987Z"
+      "createdAt": "2026-03-05T00:00:00.000Z"
     }
   ]
 }
 ```
 
-## Possiveis melhorias
+## Seguranca aplicada
 
-- Validacao mais robusta (ex.: Zod/Joi)
-- Banco de dados real (PostgreSQL/MongoDB)
+- Senha nunca e salva em texto puro.
+- Hash com `bcrypt`.
+- Token JWT com expiracao de 1 hora.
+- Rota de perfil protegida por middleware de autenticacao.
+
+## Melhorias futuras
+
+- Validacao de entrada com Zod ou Joi
 - Testes automatizados
+- Banco relacional ou NoSQL
+- Refresh token para sessao
