@@ -1,6 +1,9 @@
 ﻿const healthText = document.getElementById("health-text");
 const usersList = document.getElementById("users-list");
 const reloadUsersButton = document.getElementById("reload-users");
+const prevPageButton = document.getElementById("prev-page");
+const nextPageButton = document.getElementById("next-page");
+const pageInfo = document.getElementById("page-info");
 
 const registerForm = document.getElementById("register-form");
 const registerMessage = document.getElementById("register-message");
@@ -13,6 +16,11 @@ const profileMessage = document.getElementById("profile-message");
 
 const TOKEN_KEY = "gc_token";
 const USER_ID_KEY = "gc_user_id";
+const usersPagination = {
+  page: 1,
+  limit: 5,
+  totalPages: 1,
+};
 
 function setMessage(target, text, type) {
   target.textContent = text;
@@ -70,8 +78,22 @@ function renderUsers(users) {
 
 async function loadUsers() {
   try {
-    const users = await requestJson("/api/users");
-    renderUsers(users);
+    const data = await requestJson(
+      `/api/users?page=${usersPagination.page}&limit=${usersPagination.limit}`
+    );
+
+    const items = Array.isArray(data) ? data : data.items || [];
+    const currentPage = Array.isArray(data) ? 1 : data.page || 1;
+    const totalPages = Array.isArray(data) ? 1 : data.totalPages || 1;
+
+    usersPagination.page = currentPage;
+    usersPagination.totalPages = totalPages;
+
+    pageInfo.textContent = `Pagina ${currentPage} de ${totalPages}`;
+    prevPageButton.disabled = currentPage <= 1;
+    nextPageButton.disabled = currentPage >= totalPages;
+
+    renderUsers(items);
   } catch (error) {
     usersList.innerHTML = `<li>Failed to load users: ${error.message}</li>`;
   }
@@ -109,6 +131,7 @@ registerForm.addEventListener("submit", async (event) => {
 
     setMessage(registerMessage, `User ${user.username} created successfully.`, "ok");
     registerForm.reset();
+    usersPagination.page = 1;
     await loadUsers();
   } catch (error) {
     setMessage(registerMessage, error.message, "error");
@@ -144,6 +167,24 @@ loginForm.addEventListener("submit", async (event) => {
 });
 
 reloadUsersButton.addEventListener("click", loadUsers);
+
+prevPageButton.addEventListener("click", async () => {
+  if (usersPagination.page <= 1) {
+    return;
+  }
+
+  usersPagination.page -= 1;
+  await loadUsers();
+});
+
+nextPageButton.addEventListener("click", async () => {
+  if (usersPagination.page >= usersPagination.totalPages) {
+    return;
+  }
+
+  usersPagination.page += 1;
+  await loadUsers();
+});
 
 loadProfileButton.addEventListener("click", async () => {
   const token = getToken();
@@ -205,6 +246,7 @@ deleteAccountButton.addEventListener("click", async () => {
     clearAuth();
     setMessage(loginMessage, "Conta excluida com sucesso.", "ok");
     setMessage(profileMessage, "Sua conta foi removida.", "ok");
+    usersPagination.page = 1;
     await loadUsers();
   } catch (error) {
     setMessage(profileMessage, error.message, "error");
